@@ -1,0 +1,13 @@
+# .gitignore
+
+# Python
+__pycache__
+.venv
+.eggs
+
+# IDE
+.idea
+.vscode
+
+# Other
+.env
