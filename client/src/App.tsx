@@ -1,35 +1,59 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect } from 'react';
+import { useAudioStream } from './hooks/useAudioStream';
+import { useSimulationSocket } from './hooks/useSimulationSocket';
+import { World } from './components/World';
+
+const WS_URL = 'ws://localhost:8000/ws/simulation';
 
 function App() {
-  const [count, setCount] = useState(0)
+  // Connect to Socket
+  const { isConnected, worldState, feedback, sendAudio } = useSimulationSocket(WS_URL);
+
+  // Connect Audio Stream to Socket Sender
+  const { isRecording, startRecording, stopRecording } = useAudioStream(sendAudio);
+
+  // Keyboard shortcut for PTT (Hold Space)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !isRecording && !e.repeat) {
+        startRecording();
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && isRecording) {
+        stopRecording();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isRecording, startRecording, stopRecording]);
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="ui-overlay">
+        <div className="status-badge" style={{ color: isConnected ? '#4caf50' : '#f44336' }}>
+          {isConnected ? 'LIVE' : 'DISCONNECTED'}
+        </div>
+
+        <div className="transcript-box">
+          {isRecording ? "Listening..." : "Hold SPACE to speak"}
+        </div>
+
+        {feedback && (
+          <div className="feedback-box">
+            {feedback}
+          </div>
+        )}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+
+      <World gameState={worldState} />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
