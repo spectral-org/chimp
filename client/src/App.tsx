@@ -1,60 +1,69 @@
-import React, { useEffect } from 'react';
-import { useAudioStream } from './hooks/useAudioStream';
-import { useSimulationSocket } from './hooks/useSimulationSocket';
-import { World } from './components/World';
+/**
+ * Main App Component
+ * Combines 3D world with UI overlay
+ */
 
-const WS_URL = 'ws://127.0.0.1:8000/ws/simulation';
+import { useEffect } from 'react';
+import { World } from './components/World';
+import {
+    Header,
+    MissionPanel,
+    PlayerStats,
+    TranscriptPanel,
+    ReasoningPanel,
+    TextInput,
+    MicrophoneButton,
+    NPCDialogue
+} from './components/UI';
+import { useWebSocket } from './hooks/useWebSocket';
 
 function App() {
-  // Connect to Socket
-  const { isConnected, worldState, feedback, sendAudio, sendJSON } = useSimulationSocket(WS_URL);
+    const { connect } = useWebSocket();
 
-  // Connect Audio Stream to Socket Sender
-  const { isRecording, startRecording, stopRecording } = useAudioStream(sendAudio);
+    useEffect(() => {
+        // Connect on mount
+        connect();
+    }, [connect]);
 
-  // Keyboard shortcut for PTT (Hold Space)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !isRecording && !e.repeat) {
-        startRecording();
-      }
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && isRecording) {
-        stopRecording();
-        sendJSON({ type: "commit" });
-      }
-    };
+    return (
+        <div className="app-container">
+            {/* 3D World */}
+            <World />
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [isRecording, startRecording, stopRecording]);
+            {/* UI Overlay */}
+            <div className="ui-overlay">
+                {/* Top bar */}
+                <Header />
 
-  return (
-    <>
-      <div className="ui-overlay">
-        <div className="status-badge" style={{ color: isConnected ? '#4caf50' : '#f44336' }}>
-          {isConnected ? 'LIVE' : 'DISCONNECTED'}
+                {/* Mission panel (top-left) */}
+                <MissionPanel />
+
+                {/* Player stats (below mission) */}
+                <PlayerStats />
+
+                {/* Reasoning chain (top-right) */}
+                <ReasoningPanel />
+
+                {/* NPC Dialogue bubble */}
+                <NPCDialogue />
+
+                {/* Transcript panel (bottom) */}
+                <TranscriptPanel />
+
+                {/* Input area */}
+                <TextInput />
+
+                {/* Microphone button (overlaid on text input) */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '20px',
+                    right: '20px',
+                }}>
+                    <MicrophoneButton />
+                </div>
+            </div>
         </div>
-
-        <div className="transcript-box">
-          {isRecording ? "Listening..." : "Hold SPACE to speak"}
-        </div>
-
-        {feedback && (
-          <div className="feedback-box">
-            {feedback}
-          </div>
-        )}
-      </div>
-
-      <World gameState={worldState} />
-    </>
-  );
+    );
 }
 
 export default App;
