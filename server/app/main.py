@@ -113,6 +113,8 @@ async def simulation_endpoint(websocket: WebSocket):
                             model_turn = response.server_content.model_turn
                             if model_turn and model_turn.parts:
                                 for part in model_turn.parts:
+                                    if part.text:
+                                        await websocket.send_json({"type": "agent_message", "text": part.text})
                                     if part.function_call:
                                         tool_calls.append(part.function_call)
                         

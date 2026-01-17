@@ -35,6 +35,8 @@ export const useSimulationSocket = (url: string) => {
                     setWorldState(data.state);
                     if (data.feedback) setFeedback(data.feedback);
                     // Optionally update transcript if returned
+                } else if (data.type === "agent_message") {
+                    setFeedback(data.text);
                 } else if (data.type === "error") {
                     console.error("Server Error:", data.message);
                 }
