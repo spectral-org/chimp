@@ -3,11 +3,11 @@ import { useAudioStream } from './hooks/useAudioStream';
 import { useSimulationSocket } from './hooks/useSimulationSocket';
 import { World } from './components/World';
 
-const WS_URL = 'ws://localhost:8000/ws/simulation';
+const WS_URL = 'ws://127.0.0.1:8000/ws/simulation';
 
 function App() {
   // Connect to Socket
-  const { isConnected, worldState, feedback, sendAudio } = useSimulationSocket(WS_URL);
+  const { isConnected, worldState, feedback, sendAudio, sendJSON } = useSimulationSocket(WS_URL);
 
   // Connect Audio Stream to Socket Sender
   const { isRecording, startRecording, stopRecording } = useAudioStream(sendAudio);
@@ -22,6 +22,7 @@ function App() {
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'Space' && isRecording) {
         stopRecording();
+        sendJSON({ type: "commit" });
       }
     };
 

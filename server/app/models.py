@@ -9,7 +9,7 @@ class InteractionEntities(BaseModel):
 class GrammarFeatures(BaseModel):
     tense: Literal["present", "past", "conditional"] = Field(..., description="The grammatical tense used")
     politeness: Literal["neutral", "polite"] = Field(..., description="The politeness level")
-    required_constructs_present: List[str] = Field(default_factory=list, description="List of required grammatical constructs found")
+    required_constructs_present: Optional[List[str]] = Field(default_factory=list, description="List of required grammatical constructs found")
 
 class ActionSchema(BaseModel):
     intent: Literal["buy_item", "negotiate", "ask_info", "give_item", "move", "interact"] = Field(..., description="The projected intent of the user")
