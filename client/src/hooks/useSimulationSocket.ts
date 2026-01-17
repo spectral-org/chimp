@@ -60,5 +60,11 @@ export const useSimulationSocket = (url: string) => {
         }
     }, []);
 
-    return { isConnected, worldState, feedback, lastTranscript, sendAudio, sendMessage };
+    const sendJSON = useCallback((payload: any) => {
+        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify(payload));
+        }
+    }, []);
+
+    return { isConnected, worldState, feedback, lastTranscript, sendAudio, sendMessage, sendJSON };
 };

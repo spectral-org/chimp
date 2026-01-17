@@ -33,6 +33,10 @@ class InterpreterAgent:
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not set")
         
+        # Hack to prevent SDK from using GOOGLE_API_KEY if it exists in the system env
+        if "GOOGLE_API_KEY" in os.environ:
+            del os.environ["GOOGLE_API_KEY"]
+
         self.client = genai.Client(api_key=self.api_key, http_options={"api_version": "v1alpha"})
         self.model = "gemini-2.0-flash-exp" 
 
@@ -81,16 +85,9 @@ class InterpreterAgent:
         )
 
         config = types.LiveConnectConfig(
-            response_modalities=["AUDIO"], # We want the model to HEAR audio, but it can reply with Audio/Text. Ideally we want it to just call tools.
-            # Actually, we want it to NOT generate audio back, just tool calls.
-            # But response_modalities=["AUDIO"] is usually default for Live.
-            # We can set generation_config to suppress speech?
+            response_modalities=["TEXT"], 
             system_instruction=types.Content(parts=[types.Part(text=INTERPRETER_SYSTEM_INSTRUCT)]),
-            tools=[tool_decl],
-            generation_config=types.GenerationConfig(
-                response_modalities=["TEXT"], # Force text/tool only
-                temperature=0.1
-            )
+            tools=[tool_decl]
         )
         
         return self.client.aio.live.connect(model=self.model, config=config)
